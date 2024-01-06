@@ -5,38 +5,76 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import edu.pwr.kozanecki.sensorgame.ui.theme.SensorGameTheme
 
 class MainActivity : ComponentActivity(), SensorEventListener {
+    private val startingPosition = Offset(GameParameters.STARTING_POSITION_X, GameParameters.STARTING_POSITION_Y)
     private lateinit var sensorManager: SensorManager
-    private val color = mutableStateOf(Color.Red)
-    private val position = mutableStateOf(Offset(150f, 150f))
+    private val backgroundColor = mutableStateOf(Color.Green)
+    private val currentPosition = mutableStateOf(Offset(100f, 100f))
+    private val gameRunning = mutableStateOf(true)
     private val obstacles = listOf(
+        Obstacle(Offset(0f, 0f), size = Size(245f, 5f)),
         Obstacle(Offset(0f, 0f), size = Size(5f, 1100f)),
-        Obstacle(Offset(250f, 0f), size = Size(5f, 1100f)),
-        Obstacle(Offset(255f, 1100f), size = Size(-40f, 5f)),
+        Obstacle(Offset(100f, 250f), size = Size(5f, 700f)),
+        Obstacle(Offset(240f, 0f), size = Size(5f, 1100f)),
+        Obstacle(Offset(245f, 1100f), size = Size(-100f, 5f)),
         Obstacle(Offset(0f, 1100f), size = Size(20f, 5f)),
-        Obstacle(Offset(20f, 1100f), size = Size(5f, 900f)),
-        Obstacle(Offset(215f, 1100f), size = Size(5f, 700f)),
-        Obstacle(Offset(20f, 2000f), size = Size(500f, 5f)),
-        Obstacle(Offset(215f, 1800f), size = Size(300f, 5f))
+        Obstacle(Offset(20f, 1100f), size = Size(5f, 850f)),
+        Obstacle(Offset(190f, 1100f), size = Size(5f, 700f)),
+        Obstacle(Offset(20f, 1300f), size = Size(70f, 5f)),
+        Obstacle(Offset(20f, 1950f), size = Size(720f, 5f)),
+        Obstacle(Offset(150f, 1800f), size = Size(300f, 5f)),
+        Obstacle(Offset(450f, 1950f), size = Size(5f, -50f)),
+        Obstacle(Offset(445f, 1800f), size = Size(5f, -90f)),
+        Obstacle(Offset(445f, 1710f), size = Size(-250f, 5f)),
+        Obstacle(Offset(600f, 1850f), size = Size(5f, -320f)),
+        Obstacle(Offset(600f, 1600f), size = Size(-300f, 5f)),
+        Obstacle(Offset(300f, 1600f), size = Size(5f, -350f)),
+        Obstacle(Offset(300f, 1250f), size = Size(-110f, 5f)),
+        Obstacle(Offset(740f, 1955f), size = Size(5f, -325f)),
+        Obstacle(Offset(740f, 1650f), size = Size(300f, 5f)),
+        Obstacle(Offset(1040f, 1650f), size = Size(-5f, -400f)),
+        Obstacle(Offset(600f, 1530f), size = Size(300f, 5f)),
+        Obstacle(Offset(895f, 1530f), size = Size(5f, -150f)),
+        Obstacle(Offset(1040f, 1250f), size = Size(-300f, 5f)),
+        Obstacle(Offset(900f, 1380f), size = Size(-350f, -5f)),
+        Obstacle(Offset(550f, 1380f), size = Size(5f, -400f)),
+        Obstacle(Offset(740f, 1250f), size = Size(5f, -270f)),
+        Obstacle(Offset(740f, 980f), size = Size(-45f, 5f)),
+        Obstacle(Offset(550f, 980f), size = Size(45f, 5f)),
+        Obstacle(Offset(590f, 980f), size = Size(5f, -100f)),
+        Obstacle(Offset(695f, 980f), size = Size(5f, -100f)),
+        Obstacle(Offset(695f, 890f), size = Size(90f, -5f)),
+        Obstacle(Offset(784f, 890f), size = Size(5f, -290f)),
+        Obstacle(Offset(590f, 890f), size = Size(-90f, -5f)),
+        Obstacle(Offset(498f, 890f), size = Size(5f, -290f)),
+        Obstacle(Offset(498f, 600f), size = Size(290f, 5f))
         )
 
 
@@ -51,8 +89,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     SimpleSquareWithText(
-                        color.value,
-                        position.value
+                        backgroundColor.value,
+                        currentPosition.value
                     )
                 }
             }
@@ -77,12 +115,10 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             val sides = event.values[0]
             val upDown = event.values[1] - 6f
 
-            color.value = if (upDown.toInt() == 0 && sides.toInt() == 0) Color.Green else Color.Red
+            val positionX = currentPosition.value.x - sides * 2f
+            val positionY = currentPosition.value.y + upDown * 2f
 
-            val positionX = position.value.x - sides * 2f
-            val positionY = position.value.y + upDown * 2f
-
-            position.value = Offset(positionX, positionY)
+            currentPosition.value = Offset(positionX, positionY)
         }
     }
 
@@ -103,47 +139,141 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     .background(color = color)
             )
             {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-//                    val radius = 20.dp.toPx()
-//                    drawCircle(
-//                        color = Color.White,
-//                        radius = radius,
-//                        center = position
-//                    )
-                    drawRect(Color.White, position, Size(60f, 60f))
-                    drawRect(Color.Black, Offset(0f, 0f), size = Size(5f, 1100f))
-                    drawRect(Color.Black, Offset(250f, 0f), size = Size(5f, 1100f))
-                    drawRect(Color.Black, Offset(255f, 1100f), size = Size(-40f, 5f))
-                    drawRect(Color.Black, Offset(0f, 1100f), size = Size(20f, 5f))
-                    drawRect(Color.Black, Offset(20f, 1100f), size = Size(5f, 900f))
-                    drawRect(Color.Black, Offset(215f, 1100f), size = Size(5f, 700f))
-                    drawRect(Color.Black, Offset(20f, 2000f), size = Size(500f, 5f))
-                    drawRect(Color.Black, Offset(215f, 1800f), size = Size(300f, 5f))
+                if (gameRunning.value) {
+                    backgroundColor.value = Color.Green
+                    DrawSquare(position = position)
                 }
+                DrawPath()
             }
-        if (checkCollides(position, 60.0)) {
-            Box(modifier = Modifier
-                .size(20.dp)
-                .background(Color.Yellow))
+        if (checkCollides(position)) {
+            gameRunning.value = false
+        }
+        if (checkWin(position)) {
+            ShowWinningDialog()
+        }
+        if (!gameRunning.value){
+            backgroundColor.value = Color.Red
+            ShowLostDialog()
+        }
+    }
+    
+    @Composable
+    fun DrawPath() {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+        ){
+            drawRect(Color.Black, Offset(0f, 0f), size = Size(245f, 5f))
+            drawRect(Color.Black, Offset(0f, 0f), size = Size(5f, 1100f))
+            drawRect(Color.Black, Offset(100f, 250f), size = Size(5f, 700f))
+            drawRect(Color.Black, Offset(240f, 0f), size = Size(5f, 1100f))
+            drawRect(Color.Black, Offset(245f, 1100f), size = Size(-100f, 5f))
+            drawRect(Color.Black, Offset(0f, 1100f), size = Size(20f, 5f))
+            drawRect(Color.Black, Offset(20f, 1100f), size = Size(5f, 850f))
+            drawRect(Color.Black, Offset(190f, 1100f), size = Size(5f, 700f))
+            drawRect(Color.Black, Offset(20f, 1300f), size = Size(70f, 5f))
+            drawRect(Color.Black, Offset(20f, 1950f), size = Size(720f, 5f))
+            drawRect(Color.Black, Offset(150f, 1800f), size = Size(300f, 5f))
+            drawRect(Color.Black, Offset(450f, 1950f), size = Size(5f, -50f))
+            drawRect(Color.Black, Offset(445f, 1800f), size = Size(5f, -90f))
+            drawRect(Color.Black, Offset(445f, 1710f), size = Size(-250f, 5f))
+            drawRect(Color.Black, Offset(600f, 1850f), size = Size(5f, -320f))
+            drawRect(Color.Black, Offset(600f, 1600f), size = Size(-300f, 5f))
+            drawRect(Color.Black, Offset(300f, 1600f), size = Size(5f, -350f))
+            drawRect(Color.Black, Offset(300f, 1250f), size = Size(-110f, 5f))
+            drawRect(Color.Black, Offset(740f, 1955f), size = Size(5f, -325f))
+            drawRect(Color.Black, Offset(740f, 1650f), size = Size(300f, 5f))
+            drawRect(Color.Black, Offset(1040f, 1650f), size = Size(-5f, -400f))
+            drawRect(Color.Black, Offset(600f, 1530f), size = Size(300f, 5f))
+            drawRect(Color.Black, Offset(895f, 1530f), size = Size(5f, -150f))
+            drawRect(Color.Black, Offset(1040f, 1250f), size = Size(-300f, 5f))
+            drawRect(Color.Black, Offset(900f, 1380f), size = Size(-350f, -5f))
+            drawRect(Color.Black, Offset(550f, 1380f), size = Size(5f, -400f))
+            drawRect(Color.Black, Offset(740f, 1250f), size = Size(5f, -270f))
+            drawRect(Color.Black, Offset(740f, 980f), size = Size(-45f, 5f))
+            drawRect(Color.Black, Offset(550f, 980f), size = Size(45f, 5f))
+            drawRect(Color.Black, Offset(590f, 980f), size = Size(5f, -100f))
+            drawRect(Color.Black, Offset(695f, 980f), size = Size(5f, -100f))
+            drawRect(Color.Black, Offset(695f, 890f), size = Size(90f, -5f))
+            drawRect(Color.Black, Offset(784f, 890f), size = Size(5f, -290f))
+            drawRect(Color.Black, Offset(590f, 890f), size = Size(-90f, -5f))
+            drawRect(Color.Black, Offset(498f, 890f), size = Size(5f, -290f))
+            drawRect(Color.Black, Offset(498f, 600f), size = Size(290f, 5f))
+        }
+        Box(modifier = Modifier
+            .offset(179.dp, 215.dp)
+            .size(100.dp)
+            .background(Color.White))
+    }
+    
+    @Composable
+    fun DrawSquare(position: Offset) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            drawRect(Color.White, position, Size(GameParameters.SQUARE_SIZE, GameParameters.SQUARE_SIZE))
         }
     }
 
+    @Composable
+    fun ShowLostDialog() {
+        Box(modifier = Modifier
+            .padding(horizontal = 50.dp, vertical = 150.dp)
+            .background(Color.Yellow),
+            contentAlignment = Alignment.Center   ) {
+            Column(verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally){
+                Text(text = "YOU LOST",
+                    fontSize = 38.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black)
+                Button(onClick = {
+                    gameRunning.value = true
+                    currentPosition.value = startingPosition
+                }) {
+                    Text(text = "Play again")
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun ShowWinningDialog() {
+        Box(modifier = Modifier
+            .padding(horizontal = 50.dp, vertical = 150.dp)
+            .background(Color.Yellow),
+            contentAlignment = Alignment.Center   ) {
+            Column(verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally){
+                Text(text = "YOU WON",
+                    fontSize = 38.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black)
+                Button(onClick = {
+                    gameRunning.value = true
+                    currentPosition.value = startingPosition
+                }) {
+                    Text(text = "Play again")
+                }
+            }
+        }
+    }
+    
+
     data class Obstacle(val offset: Offset, val size: Size)
 
-    private fun checkCollides(position: Offset, radius: Double): Boolean {
+    private fun checkCollides(position: Offset): Boolean {
         for (obstacle in obstacles) {
             val obstacleLeft = obstacle.offset.x
             val obstacleRight = obstacle.offset.x + obstacle.size.width
             val obstacleTop = obstacle.offset.y
             val obstacleBottom = obstacle.offset.y + obstacle.size.height
 
-            val ballLeft = (position.x - radius).toFloat()
-            val ballRight = (position.x + radius).toFloat()
-            val ballTop = (position.y - radius).toFloat()
-            val ballBottom = (position.y + radius).toFloat()
+            val ballLeft = position.x
+            val ballRight = position.x + GameParameters.SQUARE_SIZE
+            val ballTop = position.y
+            val ballBottom = position.y + GameParameters.SQUARE_SIZE
 
 
             if (ballLeft < obstacleRight &&
@@ -153,6 +283,13 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             ) {
                 return true
             }
+        }
+        return false
+    }
+
+    private fun checkWin(position: Offset): Boolean {
+        if (position.x > 498 && position.x + (GameParameters.SQUARE_SIZE) < 784 && (position.y + GameParameters.SQUARE_SIZE) < 890 && position.y > 600){
+            return true
         }
         return false
     }
