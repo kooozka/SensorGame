@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dialog_horizontal_padding">50dp</dimen>
+    <dimen name="dialog_vertical_padding">150dp</dimen>
+    <dimen name="dialog_font_size">38sp</dimen>
+</resources>
