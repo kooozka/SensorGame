@@ -5,6 +5,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
@@ -32,15 +33,18 @@ import androidx.compose.ui.unit.sp
 import edu.pwr.kozanecki.sensorgame.ui.theme.SensorGameTheme
 
 class MainActivity : ComponentActivity(), SensorEventListener {
-    private val startingPosition = Offset(GameParameters.STARTING_POSITION_X, GameParameters.STARTING_POSITION_Y)
+    private val startingPosition =
+        Offset(GameParameters.STARTING_POSITION_X, GameParameters.STARTING_POSITION_Y)
     private lateinit var sensorManager: SensorManager
     private val backgroundColor = mutableStateOf(Color.Green)
     private val currentPosition = mutableStateOf(Offset(100f, 100f))
     private val gameRunning = mutableStateOf(true)
-
+    private val lost = mutableStateOf(false)
+    private val won = mutableStateOf(false)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onCreate(savedInstanceState)
         setUpSensorStuff()
         setContent {
@@ -94,25 +98,27 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     @Composable
     fun GameInterface(color: Color, position: Offset) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = color)
-            )
-            {
-                if (gameRunning.value) {
-                    backgroundColor.value = Color.Green
-                    DrawSquare(position = position)
-                }
-                DrawPath()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = color)
+        )
+        {
+            if (gameRunning.value) {
+                backgroundColor.value = Color.Green
+                DrawSquare(position = position)
+                checkWin(position)
             }
+            DrawPath()
+        }
         if (checkCollides(position)) {
             gameRunning.value = false
+            lost.value = true
         }
-        if (checkWin(position)) {
+        if (won.value) {
             ShowDialog(message = stringResource(id = R.string.you_won))
         }
-        if (!gameRunning.value){
+        if (lost.value) {
             backgroundColor.value = Color.Red
             ShowDialog(message = stringResource(id = R.string.you_lost))
         }
@@ -124,28 +130,41 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            drawRect(Color.White, position, Size(GameParameters.SQUARE_SIZE, GameParameters.SQUARE_SIZE))
+            drawRect(
+                Color.White,
+                position,
+                Size(GameParameters.SQUARE_SIZE, GameParameters.SQUARE_SIZE)
+            )
         }
     }
 
     @Composable
     fun ShowDialog(message: String) {
-        Box(modifier = Modifier
-            .padding(
-                horizontal = dimensionResource(id = R.dimen.dialog_horizontal_padding),
-                vertical = dimensionResource(id = R.dimen.dialog_vertical_padding
+        Box(
+            modifier = Modifier
+                .padding(
+                    horizontal = dimensionResource(id = R.dimen.dialog_horizontal_padding),
+                    vertical = dimensionResource(
+                        id = R.dimen.dialog_vertical_padding
+                    )
                 )
-            )
-            .background(Color.Yellow),
-            contentAlignment = Alignment.Center   ) {
-            Column(verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally){
-                Text(text = message,
+                .background(Color.Yellow),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = message,
                     fontSize = 38.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black)
+                    color = Color.Black
+                )
                 Button(onClick = {
                     gameRunning.value = true
+                    lost.value = false
+                    won.value = false
                     currentPosition.value = startingPosition
                 }) {
                     Text(text = stringResource(R.string.play_again))
@@ -153,6 +172,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             }
         }
     }
+
+    private fun checkWin(position: Offset) {
+        if (position.x > 498 && position.x + (GameParameters.SQUARE_SIZE) < 784 && (position.y + GameParameters.SQUARE_SIZE) < 890 && position.y > 600) {
+            won.value = true
+            gameRunning.value = false
+        }
     }
 
     private fun checkCollides(position: Offset): Boolean {
@@ -178,11 +203,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         }
         return false
     }
+}
 
-    private fun checkWin(position: Offset): Boolean {
-        if (position.x > 498 && position.x + (GameParameters.SQUARE_SIZE) < 784 && (position.y + GameParameters.SQUARE_SIZE) < 890 && position.y > 600){
-            return true
-        }
-        return false
-    }
 

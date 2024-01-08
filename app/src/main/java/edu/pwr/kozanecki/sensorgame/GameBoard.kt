@@ -45,11 +45,11 @@ val obstacles = listOf(
         Obstacle(Offset(550f, 980f), size = Size(45f, 5f)),
         Obstacle(Offset(590f, 880f), size = Size(5f, 100f)),
         Obstacle(Offset(695f, 880f), size = Size(5f, 100f)),
-        Obstacle(Offset(500f, 885f), size = Size(90f, 5f)),
-        Obstacle(Offset(695f, 885f), size = Size(90f, 5f)),
-        Obstacle(Offset(784f, 600f), size = Size(5f, 290f)),
-        Obstacle(Offset(498f, 600f), size = Size(5f, 290f)),
-        Obstacle(Offset(498f, 600f), size = Size(290f, 5f))
+//        Obstacle(Offset(500f, 885f), size = Size(90f, 5f)),
+//        Obstacle(Offset(695f, 885f), size = Size(90f, 5f)),
+//        Obstacle(Offset(784f, 600f), size = Size(5f, 290f)),
+//        Obstacle(Offset(498f, 600f), size = Size(5f, 290f)),
+//        Obstacle(Offset(498f, 600f), size = Size(290f, 5f))
     )
 
     data class Obstacle(val offset: Offset, val size: Size)
